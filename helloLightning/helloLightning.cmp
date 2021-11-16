@@ -1,0 +1,178 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes" access="global"
+                controller="helloLightningCtrl">
+    
+    <aura:attribute name="firstName" type="String" />
+    <aura:attribute name="lastName" type="String" />
+    <aura:attribute name="contact" type="Contact" />
+    <aura:attribute name="contactModal" type="Contact" />
+    <aura:attribute name="contacts" type="Contact[]" />
+    <aura:attribute name="contactsBackup" type="Contact[]" />
+    
+    <aura:attribute name="indexContact" type="Integer" />
+    <aura:attribute name="showUpdated" type="Boolean" />
+    
+    <aura:attribute name="userSession" type="User" />
+    
+    <aura:attribute name="showSpinner" type="Boolean" default="true" />
+    <aura:attribute name="showSpinnerCustom" type="Boolean" default="false" />
+    
+    <aura:handler name="init" value="{! this }" action="{! c.doInit }" />
+    <aura:handler name="helloLightningEvt" event="c:helloLightningEvt" action="{! c.searchContactsCustom }"/>
+    
+    <aura:if isTrue="{! v.showSpinner }">
+        <lightning:spinner variant="brand" size="large" class="slds-is-fixed" />
+    </aura:if>
+    
+    <aura:if isTrue="{! v.showSpinnerCustom }">
+        <lightning:spinner size="small" class="slds-is-fixed" />
+    </aura:if>
+    
+    <div class="slds-box slds-theme_default">
+        <p>{! v.userSession.FirstName }</p>
+        <p>{! v.userSession.LastName }</p>
+    </div>
+    
+    <div class="slds-grid slds-gutters">
+        <div class="slds-col slds-size_2-of-3">
+            <div class="slds-box slds-theme_default">
+                <div class="slds-m-bottom_medium">
+                    <div class="slds-grid slds-gutters slds-grid_vertical-align-end">
+                        <div class="slds-col">
+                            <lightning:input type="text" name="firstName" label="Primeiro nome" value="{! v.firstName }" onchange="{! c.searchName }" />
+                        </div>
+                        <div class="slds-col">
+                            <lightning:input type="text" name="lastName" label="Ultimo nome" class="custom-background" value="{! v.lastName }" onchange="{! c.searchName }" />
+                        </div>
+                        <div class="slds-col">
+                            <lightning:button variant="brand" label="Buscar" onclick="{! c.searchContacts }" />
+                        </div>
+                        <div class="slds-col">
+                            <lightning:button variant="brand" label="Novo" onclick="{! c.newContact }" />
+                        </div>
+                        
+                        <div class="slds-col">
+                            <lightning:button variant="brand" label="Clear" onclick="{! c.clear }" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <aura:if isTrue="{! not(v.showSpinner) }">
+                        <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                            <thead>
+                                <tr class="slds-text-title_caps">
+                                    <th scope="col">
+                                        <div class="slds-truncate">Id</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate">Primeiro nome</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate">Ultimo nome</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate">Email</div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="slds-truncate">Ações</div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{! v.contacts }" var="contact" indexVar="index">
+                                    <tr class="{! and(index == v.indexContact, v.showUpdated) ? 'updated' : '' }">
+                                        <td data-label="Account Name">
+                                            <div class="slds-truncate">
+                                                <a href="javascript:void(0);" class="slds-text-link_reset" onclick="{! c.detalhes }" data-index="{! index }">{! contact.Id }</a>
+                                            </div>
+                                        </td>
+                                        <td data-label="Account Name">
+                                            <div class="slds-truncate">{! contact.FirstName }</div>
+                                        </td>
+                                        <td data-label="Account Name">
+                                            <div class="slds-truncate">{! contact.LastName }</div>
+                                        </td>
+                                        <td data-label="Account Name">
+                                            <div class="slds-truncate">{! contact.Email }</div>
+                                        </td>
+                                        <td data-label="Account Name">
+                                            <lightning:buttonMenu iconName="utility:settings" onselect="{! c.actionContact }">
+                                                <lightning:menuItem label="Editar" value="{! 'edit;' + index }" />
+                                                <lightning:menuItem label="Apagar" value="{! 'delete;' + index }"/>
+                                            </lightning:buttonMenu>
+                                        </td>
+                                    </tr>
+                                </aura:iteration>
+                                
+                                <aura:if isTrue="{! v.contacts.length == 0 }">
+                                    <tr>
+                                        <td colspan="4">
+                                            <div class="slds-truncate">Nenhum contato encontrado</div>
+                                        </td>
+                                    </tr>
+                                </aura:if>
+                            </tbody>
+                        </table>
+                    </aura:if>
+                    <aura:if isTrue="{! v.showSpinner }">
+                        Yeah!
+                    </aura:if>
+                </div>
+            </div>
+        </div>
+        
+        <div class="slds-col slds-size_1-of-3">
+            <div class="slds-box slds-theme_default">
+                
+                <aura:if isTrue="{! not(empty(v.contact)) }">
+                    <div class="slds-grid slds-wrap slds-gutters">
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning:input aura:id="formField" type="text" name="firstName" label="Primeiro nome" value="{! v.contact.FirstName }"
+                                             pattern="[a-zA-Z ]+" messageWhenPatternMismatch="Somente letras" required="true" minlength="2" messageWhenValueMissing="Favor preencher este campo" />
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <lightning:input aura:id="formField" type="text" name="lastName" label="Ultimo nome" value="{! v.contact.LastName }"
+                                             pattern="[A-Za-z ]+" messageWhenPatternMismatch="Somente letras" required="true" minlength="2" messageWhenValueMissing="Favor preencher este campo" />
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-1">
+                            <lightning:input aura:id="formField" type="email" name="email" label="Email" value="{! v.contact.Email }"
+                                             required="true" />
+                        </div>
+                        
+                        <div class="slds-col slds-size_1-of-1 slds-m-top_small">
+                            <lightning:button variant="brand" label="Salvar" class="slds-size_1-of-1" onclick="{! c.save }" />
+                        </div>
+                        <div class="slds-col slds-size_1-of-1 slds-m-top_x-small">
+                            <lightning:button variant="neutral" label="Cancelar" class="slds-size_1-of-1" onclick="{! c.cancel }" />
+                        </div>
+                    </div>
+                </aura:if>
+                
+            </div>
+            
+            <div class="slds-box slds-theme_default slds-m-top_small">
+                <c:contactForm aura:id="componentChild" contactChild="{! v.contact }" />
+            </div>
+        </div>
+    </div>
+    
+    
+    <aura:if isTrue="{! not(empty(v.contactModal)) }">
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Detalhes do contato</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <p><strong>Phone:</strong> {! v.contactModal.Phone }</p>
+                </div>
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick="{! c.closeModal }">Fechar</button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </aura:if>
+    
+</aura:component>
