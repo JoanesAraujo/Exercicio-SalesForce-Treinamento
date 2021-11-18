@@ -1,7 +1,7 @@
 # Treinamento SALESFORCE Accenture /2018
 
 ​                															                                                                               
-<img align="right" src="https://user-images.githubusercontent.com/46785328/140628451-0b160278-f945-491d-8165-cdb903c99b84.png"/>
+<img align="right" img src="./salesforce.png"/>
 
 
 <br>
